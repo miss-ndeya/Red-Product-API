@@ -57,3 +57,49 @@ exports.getAllUsers = (req, res, next) => {
       res.status(500).json({ error });
     });
 };
+
+exports.forgotPassword = (req, res, next) => {
+  const { email } = req.body;
+  
+  User.findOne({ email })
+    .then(user => {
+      if (!user) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé !' });
+      }
+
+      const token = jwt.sign({ userId: user._id }, 'RESET_PASSWORD_SECRET', { expiresIn: '1h' });
+
+      user.resetPasswordToken = token;
+      user.resetPasswordExpires = Date.now() + 3600000; 
+      return user.save();
+    })
+    .then(user => {
+    
+      res.status(200).json({ message: 'Un e-mail de réinitialisation de mot de passe a été envoyé !' });
+    })
+    .catch(error => res.status(500).json({ error }));
+};
+
+exports.resetPassword = (req, res, next) => {
+  const { token, newPassword } = req.body;
+
+  User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } })
+    .then(user => {
+      if (!user) {
+        return res.status(404).json({ error: 'Token invalide ou expiré !' });
+      }
+
+      bcrypt.hash(newPassword, 10)
+        .then(hash => {
+          user.password = hash;
+          user.resetPasswordToken = undefined;
+          user.resetPasswordExpires = undefined;
+          return user.save();
+        })
+        .then(() => {
+          res.status(200).json({ message: 'Mot de passe réinitialisé avec succès !' });
+        })
+        .catch(error => res.status(500).json({ error }));
+    })
+    .catch(error => res.status(500).json({ error }));
+};

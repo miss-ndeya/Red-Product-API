@@ -8,6 +8,10 @@ const User = require('../models/user');
 router.post('/signup', userCtrl.signup);
 router.post('/login', userCtrl.login);
 
+router.post('/forgotPassword', userCtrl.forgotPassword);
+// router.get('/resetPassword', userCtrl.resetPassword);
+router.post('/resetPassword', userCtrl.resetPassword);
+
 // Route pour récupérer tous les utilisateurs
 router.get('/users', userCtrl.getAllUsers);
 

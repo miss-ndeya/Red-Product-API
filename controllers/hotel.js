@@ -122,7 +122,7 @@ exports.modifyHotel = (req, res, next) => {
 exports.deleteHotel = (req, res, next) => {
   Hotel.findOne({ _id: req.params.id })
     .then((hotel) => {
-      const filename = hotel.imageUrl.split("/images/")[1];
+      const filename = hotel.image.split("/images/")[1];
       fs.unlink(`images/${filename}`, () => {
         Hotel.deleteOne({ _id: req.params.id })
           .then(() => {

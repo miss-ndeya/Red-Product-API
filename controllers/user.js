@@ -3,25 +3,48 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 
+// exports.signup = (req, res, next) => {
+//   bcrypt
+//     .hash(req.body.password, 10)
+//     .then((hash) => {
+//       const user = new User({
+//         nom: req.body.nom,
+//         email: req.body.email,
+//         password: hash,
+//         // photo: `${req.protocol}://${req.get('host')}/images/${
+//         //   req.file.filename
+//         // }`,
+//       });
+//       user
+//         .save()
+//         .then(() => res.status(201).json({ message: "Utilisateur créé !" }))
+//         .catch((error) => res.status(400).json({ error }));
+//     })
+//     .catch((error) => res.status(500).json({ error }));
+// };
+
 exports.signup = (req, res, next) => {
-  bcrypt
-    .hash(req.body.password, 10)
+  bcrypt.hash(req.body.password, 10)
     .then((hash) => {
       const user = new User({
         nom: req.body.nom,
         email: req.body.email,
-        password: hash,
-        // photo: `${req.protocol}://${req.get('host')}/images/${
-        //   req.file.filename
-        // }`,
+        password: hash
       });
-      user
-        .save()
+      user.save()
         .then(() => res.status(201).json({ message: "Utilisateur créé !" }))
-        .catch((error) => res.status(400).json({ error }));
+        .catch((error) => {
+          if (error.name === 'ValidationError' && error.errors && error.errors.email && error.errors.email.kind === 'unique') {
+            // Email déjà existant dans la base de données
+            return res.status(400).json({ error: "L'adresse e-mail est déjà utilisée." });
+          }
+          // Autres erreurs de validation ou erreurs internes du serveur
+          return res.status(400).json({ error: "Une erreur s'est produite lors de l'inscription." });
+        });
     })
     .catch((error) => res.status(500).json({ error }));
 };
+
 
 exports.login = (req, res, next) => {
   User.findOne({ email: req.body.email })
